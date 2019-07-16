@@ -1,0 +1,58 @@
+# -*- mode: Snakemake -*-
+
+from sunbeamlib import samtools
+
+rule all_mapping_withFilter:
+    input: TARGET_MAPPING_FILTER
+
+rule filter_aln_quality:
+    input:
+        str(MAPPING_FP/'{genome}'/'{sample}.bam')
+    output:
+        str(MAPPING_FP/'{genome}'/'filtered'/'{sample}_filtered.bam')
+    params:
+        alnLen=Cfg['sbx_mapping_withFilter']['alnLen'],
+        percIdentity=Cfg['sbx_mapping_withFilter']['percIdentity']
+    run:
+        print(input)
+        samtools.filter_bam_alignments(
+            input[0], output[0], params.percIdentity, params.alnLen)
+
+rule samtools_get_coverage_filtered:
+    input:
+        str(MAPPING_FP/'{genome}'/'filtered'/'{sample}_filtered.bam')
+    output:
+        str(MAPPING_FP/'intermediates'/'{genome}'/'{sample}_filtered.csv')
+    run:
+        samtools.get_coverage_stats(
+            wildcards.genome, input[0], wildcards.sample, output[0])
+
+
+def _sorted_filtered_csvs(w):
+    pattern = str(MAPPING_FP/'intermediates'/w.genome/'{sample}_filtered.csv')
+    paths = sorted(expand(pattern, sample=Samples.keys()))
+    return(paths)
+
+rule samtools_summarize_filtered_coverage:
+    input: _sorted_filtered_csvs
+    output:
+        str(MAPPING_FP/'{genome}'/'filtered'/'coverage_filtered.csv')
+    shell: "(head -n 1 {input[0]}; tail -q -n +2 {input}) > {output}"
+    
+
+rule samtools_summarize_num_mapped_reads:
+    input: 
+        str(MAPPING_FP/'{genome}'/'filtered'/'{sample}_filtered.bam')
+    output:
+        str(MAPPING_FP/'intermediates'/'{genome}'/'{sample}_filtered_numReads.csv')
+    shell:
+        """
+        samtools idxstats {input} | (sed 's/^/{wildcards.sample}\t/') > {output}
+        """
+
+rule samtools_summarize_numReads:
+    input:
+        expand(str(MAPPING_FP/'intermediates'/'{genome}'/'{sample}_filtered_numReads.csv'), genome=GenomeSegments.keys(), sample=Samples.keys())
+    output:
+        str(MAPPING_FP/'{genome}'/'filtered'/'numReads.csv')
+    shell: "(cat {input}) > {output}"
