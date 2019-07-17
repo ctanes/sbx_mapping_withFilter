@@ -50,12 +50,13 @@ rule filter_aln_quality:
 
 rule samtools_get_coverage_filtered:
     input:
-        str(MAPPING_FP/'{genome}'/'filtered'/'{sample}.bam')
+        in_bam=str(MAPPING_FP/'{genome}'/'filtered'/'{sample}.bam'),
+	in_bai=str(MAPPING_FP/'{genome}'/'filtered'/'{sample}.bam.bai')
     output:
         str(MAPPING_FP/'intermediates'/'{genome}'/'filtered'/'{sample}.csv')
     run:
         samtools.get_coverage_stats(
-            wildcards.genome, input[0], wildcards.sample, output[0])
+            wildcards.genome, input.in_bam, wildcards.sample, output[0])
 
 #rule samtools_index_filtered:
 #    input: str(MAPPING_FP/'{genome}'/'filtered'/'{sample}.bam')
