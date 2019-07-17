@@ -1,6 +1,8 @@
 # -*- mode: Snakemake -*-
 
 from sunbeamlib import samtools
+import pysam
+import re
 
 def filter_bam_alignments(bam_in_fp, bam_out_fp, percIdentity, alnLen):
     """                                              
@@ -37,27 +39,31 @@ rule filter_aln_quality:
     input:
         str(MAPPING_FP/'{genome}'/'{sample}.bam')
     output:
-        str(MAPPING_FP/'{genome}'/'filtered'/'{sample}_filtered.bam')
+        str(MAPPING_FP/'{genome}'/'filtered'/'{sample}.bam')
     params:
         alnLen=Cfg['sbx_mapping_withFilter']['alnLen'],
         percIdentity=Cfg['sbx_mapping_withFilter']['percIdentity']
     run:
         print(input)
-        samtools.filter_bam_alignments(
+        filter_bam_alignments(
             input[0], output[0], params.percIdentity, params.alnLen)
 
 rule samtools_get_coverage_filtered:
     input:
-        str(MAPPING_FP/'{genome}'/'filtered'/'{sample}_filtered.bam')
+        str(MAPPING_FP/'{genome}'/'filtered'/'{sample}.bam')
     output:
-        str(MAPPING_FP/'intermediates'/'{genome}'/'{sample}_filtered.csv')
+        str(MAPPING_FP/'intermediates'/'{genome}'/'filtered'/'{sample}.csv')
     run:
         samtools.get_coverage_stats(
             wildcards.genome, input[0], wildcards.sample, output[0])
 
+#rule samtools_index_filtered:
+#    input: str(MAPPING_FP/'{genome}'/'filtered'/'{sample}.bam')
+#    output: str(MAPPING_FP/'{genome}'/'filtered'/'{sample}.bam.bai')
+#    shell: "samtools index {input} {output}"
 
 def _sorted_filtered_csvs(w):
-    pattern = str(MAPPING_FP/'intermediates'/w.genome/'{sample}_filtered.csv')
+    pattern = str(MAPPING_FP/'intermediates'/w.genome/'filtered'/'{sample}.csv')
     paths = sorted(expand(pattern, sample=Samples.keys()))
     return(paths)
 
@@ -70,7 +76,7 @@ rule samtools_summarize_filtered_coverage:
 
 rule samtools_summarize_num_mapped_reads:
     input: 
-        str(MAPPING_FP/'{genome}'/'filtered'/'{sample}_filtered.bam')
+        str(MAPPING_FP/'{genome}'/'filtered'/'{sample}.bam')
     output:
         str(MAPPING_FP/'intermediates'/'{genome}'/'{sample}_filtered_numReads.csv')
     shell:
