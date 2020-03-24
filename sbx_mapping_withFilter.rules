@@ -16,9 +16,14 @@ TARGET_MAPPING_FILTER = [
         genome=GenomeSegments.keys()),
     expand(
         str(MAPPING_FP/"{genome}"/"numReads.csv"),
+        genome=GenomeSegments.keys()),
+    expand(
+        str(MAPPING_FP/'filtered'/'{genome}'/'sliding_coverage.csv'),
+        genome=GenomeSegments.keys()),
+    expand(
+        str(MAPPING_FP/'{genome}'/'sliding_coverage.csv'),
         genome=GenomeSegments.keys())
 ]
-
 
 def filter_bam_alignments(bam_in_fp, bam_out_fp, percIdentity, alnLen):
     """                                              
