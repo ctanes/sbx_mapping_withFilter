@@ -54,12 +54,6 @@ def filter_bam_alignments(bam_in_fp, bam_out_fp, percIdentity, alnLen):
 
 
 def sliding_window_coverage(genome, bamfile, sample, output_fp, N, sampling):
-    print(genome)
-    print(bamfile)
-    print(sample)
-    print(output_fp)
-    print(N)
-    print(sampling)
 
     output_rows = []
     args = ["samtools", "depth", "-aa", bamfile]
