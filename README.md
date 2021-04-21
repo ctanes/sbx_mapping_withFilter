@@ -24,3 +24,16 @@ It will also output:
   ```bash
   cat sunbeam/extensions/sbx_mapping_withFilter/config.yml >> sunbeam_config.yml
   ```
+## Running it
+
+`sunbeam all_mapping_withFilter` with your other options will run just this rule.
+
+## Known issues
+
+Sometimes, the run will fail, the only workaround is to comment out the qc.rules in the Snakefile, they look like this:
+```
+113 # ---- Quality control rules
+114 #include: "rules/qc/qc.rules"
+115 include: "rules/qc/decontaminate.rules"
+```
+(Line numbers from Snakefile in sunbeam directory)
